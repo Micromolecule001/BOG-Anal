@@ -1,0 +1,323 @@
+openapi: 3.1.0
+info:
+  title: Crypto Analysis API
+  version: '2.1.1'
+  description: API для сбора и анализа криптовалютных данных, поддерживающий запросы с различных бирж.
+
+servers:
+  - url: https://e407-91-210-248-237.ngrok-free.app  # Замените на ваш URL API
+    description: Основной сервер API
+
+paths:
+  /run_data_collection/{exchange}/{symbol}/{interval}:
+    get:
+      summary: Запуск сбора данных по криптопаре с указанием биржи
+      description: Собирает свечные данные по указанной криптопаре, таймфрейму и выбранной бирже.
+      operationId: runDataCollection
+      parameters:
+        - name: exchange
+          in: path
+          required: true
+          description: Название биржи для сбора данных (например, binance, bybit, bingx).
+          schema:
+            type: string
+        - name: symbol
+          in: path
+          required: true
+          description: Символ криптопары (например, BTCUSDT).
+          schema:
+            type: string
+        - name: interval
+          in: path
+          required: true
+          description: Таймфрейм данных (например, 15m, 1h, 4h, 1d, 1w).
+          schema:
+            type: string
+        - name: num_candles
+          in: query
+          required: false
+          description: Количество свечей для сбора (по умолчанию 1400).
+          schema:
+            type: integer
+            default: 1400
+      responses:
+        '200':
+          description: Успешный сбор данных
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Успешное сообщение
+        '404':
+          description: Пара не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Symbol not found"
+        '500':
+          description: Ошибка выполнения сбора данных
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
+  /run_indicators_analysis/{symbol}/{interval}:
+    get:
+      summary: Запуск анализа индикаторов для криптопары
+      description: Выполняет анализ индикаторов по криптопаре и таймфрейму.
+      operationId: runIndicatorsAnalysis
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Символ криптопары (например, BTCUSDT).
+          schema:
+            type: string
+        - name: interval
+          in: path
+          required: true
+          description: Таймфрейм данных (например, 15m, 1h, 4h, 1d).
+          schema:
+            type: string
+        - name: num_candles
+          in: query
+          required: false
+          description: Количество свечей для анализа (по умолчанию 1400).
+          schema:
+            type: integer
+            default: 1400
+      responses:
+        '200':
+          description: Успешный анализ индикаторов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Успешное сообщение
+        '500':
+          description: Ошибка выполнения анализа индикаторов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
+  /get_indicators_json/{symbol}/{interval}:
+    get:
+      summary: Получение индикаторов для криптопары в формате JSON
+      description: Возвращает индикаторы и данные свечей для указанной пары и таймфрейма в формате JSON. Включает данные волатильности в отдельной секции.
+      operationId: getIndicatorsBySymbolAndInterval
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Символ криптопары (например, BTCUSDT).
+          schema:
+            type: string
+        - name: interval
+          in: path
+          required: true
+          description: Таймфрейм данных (например, 15m, 1h, 4h).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешное получение данных индикаторов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data_for_Analysis:
+                    type: array
+                    description: Основная секция с данными для анализа
+                    items:
+                      type: object
+                      properties:
+                        row_number:
+                          type: integer
+                          description: Порядковый номер строки
+                        timestamp:
+                          type: string
+                          description: Время свечи
+                        open:
+                          type: number
+                          description: Цена открытия
+                        high:
+                          type: number
+                          description: Максимальная цена
+                        low:
+                          type: number
+                          description: Минимальная цена
+                        close:
+                          type: number
+                          description: Цена закрытия
+                        volume:
+                          type: number
+                          description: Объем
+                        number_of_trades:
+                          type: integer
+                          description: Число сделок
+                        taker_buy_base_asset_volume:
+                          type: number
+                          description: Объем рыночных покупок
+                        long_short_ratio:
+                          type: number
+                          description: Соотношение длинных и коротких позиций
+                        RSI:
+                          type: number
+                          description: Индикатор RSI
+                        MACD:
+                          type: number
+                          description: Значение MACD
+                        MACD_signal:
+                          type: number
+                          description: Сигнальная линия MACD
+                        MACD_hist:
+                          type: number
+                          description: Гистограмма MACD
+                        OBV:
+                          type: number
+                          description: Индикатор OBV
+                        Stochastic_k:
+                          type: number
+                          description: Линия K стохастика
+                        Stochastic_d:
+                          type: number
+                          description: Линия D стохастика
+                        Parabolic_SAR:
+                          type: number
+                          description: Индикатор параболического SAR
+                        Boillenger_Upper:
+                          type: number
+                          description: Верхняя линия Bollinger Bands
+                        Boillenger_Middle:
+                          type: number
+                          description: Средняя линия Bollinger Bands
+                        Boillenger_Lower:
+                          type: number
+                          description: Нижняя линия Bollinger Bands
+                        EMA_9:
+                          type: number
+                          description: Экспоненциальная скользящая средняя (9 периодов)
+                        EMA_21:
+                          type: number
+                          description: Экспоненциальная скользящая средняя (21 период)
+                        VWAP:
+                          type: number
+                          description: Цена, взвешенная по объему (VWAP)
+                        CCI:
+                          type: number
+                          description: Индикатор CCI
+                        ATR:
+                          type: number
+                          description: Индикатор ATR
+        '404':
+          description: Данные не найдены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Data not found"
+
+  /get_indicators_csv/{symbol}/{interval}:
+    get:
+      summary: Получение индикаторов для криптопары в формате CSV
+      description: Возвращает индикаторы и данные свечей для указанной пары и таймфрейма в формате CSV.
+      operationId: getIndicatorsCsvBySymbolAndInterval
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Символ криптопары (например, BTCUSDT).
+          schema:
+            type: string
+        - name: interval
+          in: path
+          required: true
+          description: Таймфрейм данных (например, 15m, 1h, 4h).
+          schema:
+            type: string
+        - name: num_candles
+          in: query
+          required: false
+          description: Количество строк для возврата (по умолчанию 1400).
+          schema:
+            type: integer
+            default: 1400
+      responses:
+        '200':
+          description: Успешное получение данных в формате CSV
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: CSV файл с индикаторами
+        '404':
+          description: Данные не найдены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Data not found"
+
+  /get_indicators_zip/{symbol}/{interval}:
+    get:
+      summary: Получение данных индикаторов в формате ZIP архива
+      description: Возвращает архив ZIP со всеми CSV-файлами индикаторов для указанной криптопары и таймфрейма.
+      operationId: getIndicatorsZipBySymbolAndInterval
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Символ криптопары (например, BTCUSDT).
+          schema:
+            type: string
+        - name: interval
+          in: path
+          required: true
+          description: Таймфрейм данных (например, 15m, 1h, 4h).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешное получение архива данных в формате ZIP
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+                description: ZIP файл с CSV файлами индикаторов
+        '404':
+          description: Данные не найдены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No indicator files found"
